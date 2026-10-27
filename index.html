@@ -1,0 +1,1313 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f1f6ff">
+  <title>Makmal 3D Isi Padu Pepejal | Matematik Tahun 4</title>
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- OrbitControls yang sepadan dengan Three.js r128 -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    :root {
+      --blue: #3274e8;
+      --blue-dark: #2053ae;
+      --orange: #ff9d42;
+      --purple: #8a67dc;
+      --green: #20a879;
+      --ink: #253451;
+      --muted: #71809b;
+      --surface: #ffffff;
+      --background: #f1f6ff;
+      --border: #e0e9f6;
+      --radius: 20px;
+      --shadow: 0 8px 28px rgba(51, 79, 125, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .hero {
+      padding: 22px clamp(16px, 4vw, 48px);
+      color: white;
+      background: linear-gradient(120deg, #2864d9, #6699f7 65%, #9a83ec);
+    }
+
+    .hero-inner {
+      max-width: 1500px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      opacity: .9;
+    }
+
+    h1 {
+      font-size: clamp(25px, 3vw, 38px);
+      margin: 7px 0;
+      line-height: 1.15;
+    }
+
+    .hero p { margin: 7px 0 0; opacity: .95; line-height: 1.5; }
+
+    .hero-badge {
+      flex-shrink: 0;
+      padding: 13px 17px;
+      border: 1px solid rgba(255,255,255,.4);
+      background: rgba(255,255,255,.16);
+      border-radius: 15px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .hero-badge span {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 5px;
+    }
+
+    main {
+      max-width: 1500px;
+      padding: 22px clamp(12px, 3vw, 36px) 38px;
+      margin: auto;
+    }
+
+    .curriculum {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px 18px;
+      margin-bottom: 20px;
+      border-radius: 15px;
+      background: #e6efff;
+      border: 1px solid #d4e3ff;
+      line-height: 1.6;
+    }
+
+    .curriculum .icon { font-size: 25px; }
+    .curriculum strong { color: var(--blue-dark); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 335px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-heading {
+      padding: 19px 21px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-heading h2, .section-title {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .small-text { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .live-pill {
+      color: #16845e;
+      background: #e0f8ed;
+      border-radius: 30px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .viewport-wrap {
+      position: relative;
+      margin: 0 12px;
+      overflow: hidden;
+      border-radius: 16px;
+      background: linear-gradient(#eaf3ff, #f7f9ff 72%, #e8f0ff);
+    }
+
+    #viewport {
+      display: block;
+      width: 100%;
+      height: 460px;
+      touch-action: none;
+      outline: none;
+    }
+
+    .dimension-tag {
+      position: absolute;
+      z-index: 2;
+      pointer-events: none;
+      background: rgba(255,255,255,.94);
+      border: 1px solid #dce7fa;
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 3px 12px rgba(45,70,115,.09);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dimension-tag strong {
+      display: block;
+      font-size: 16px;
+      margin-top: 3px;
+      color: var(--blue-dark);
+    }
+
+    #tagP { top: 15px; left: 15px; }
+    #tagL { top: 15px; right: 15px; }
+    #tagT { bottom: 15px; left: 15px; }
+
+    .viewport-help {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      background: rgba(255,255,255,.85);
+      color: #64728b;
+      font-size: 11px;
+      pointer-events: none;
+    }
+
+    .view-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 15px 20px 19px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 7px; }
+    .dot { width: 11px; height: 11px; border-radius: 4px; }
+    .dot-blue { background: #438cf5; }
+    .dot-orange { background: #ff9d42; }
+    .dot-outline { background: white; border: 1px solid #34445e; }
+
+    .sidebar { display: grid; gap: 16px; }
+
+    .control-body { padding: 0 20px 20px; }
+
+    .slider-block { margin: 14px 0 22px; }
+
+    .slider-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .slider-name { font-weight: 750; }
+
+    .slider-value {
+      min-width: 40px;
+      padding: 5px 9px;
+      border-radius: 9px;
+      background: #e9f1ff;
+      color: var(--blue-dark);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+
+    .range-scale {
+      display: flex;
+      justify-content: space-between;
+      color: #8793a8;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .mode-options { display: grid; gap: 10px; }
+
+    .mode-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .mode-option:has(input:checked) {
+      border-color: var(--blue);
+      background: #f0f5ff;
+    }
+
+    .mode-option input {
+      margin-top: 4px;
+      accent-color: var(--blue);
+    }
+
+    .mode-option strong { display: block; font-size: 14px; }
+    .mode-option small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+
+    .mode-icon { font-size: 23px; }
+
+    .button-stack { display: grid; gap: 10px; }
+
+    .btn {
+      border: 0;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-weight: 800;
+      transition: transform .15s, opacity .15s;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .6; cursor: wait; transform: none; }
+
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-secondary { background: #fff0df; color: #99551a; }
+    .btn-reset { background: #edf1f8; color: #53627b; }
+
+    .math-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .math-card {
+      position: relative;
+      padding: 20px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .math-card .mini-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--muted);
+    }
+
+    .math-card .big-number {
+      font-size: clamp(27px, 3vw, 38px);
+      font-weight: 900;
+      color: var(--blue-dark);
+      line-height: 1.2;
+      margin: 12px 0 7px;
+      overflow-wrap: anywhere;
+    }
+
+    .math-card .detail { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+    .math-card.featured {
+      background: linear-gradient(135deg, #fff4e8, #fffaf4);
+      border-color: #ffdfbd;
+    }
+
+    .math-card.featured .big-number { color: #c66a13; }
+
+    .math-card.tip {
+      background: linear-gradient(135deg, #eafbf4, #f5fffb);
+      border-color: #c9f0df;
+    }
+
+    .math-card.tip .big-number { color: #16845e; font-size: 25px; }
+
+    .layer-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 12px;
+    }
+
+    .layer-chip {
+      padding: 6px 9px;
+      border-radius: 8px;
+      background: #d8f5e8;
+      color: #157852;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .teaching-section {
+      margin-top: 20px;
+      padding: 22px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .teaching-section h2 { margin: 0 0 8px; font-size: 20px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 13px;
+      margin-top: 18px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 14px;
+      border-radius: 13px;
+      background: #f5f8ff;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .step-number {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      color: white;
+      background: var(--blue);
+      font-weight: 900;
+    }
+
+    .step strong { display: block; margin-bottom: 3px; }
+
+    .formula-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+      padding: 18px;
+      background: #eaf1ff;
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .formula-banner strong { font-size: clamp(19px, 3vw, 27px); color: var(--blue-dark); }
+
+    footer {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1050px) {
+      .workspace { grid-template-columns: minmax(0, 1fr) 290px; gap: 14px; }
+      #viewport { height: 400px; }
+      .math-grid { gap: 10px; }
+      .math-card { padding: 16px; }
+    }
+
+    @media (max-width: 780px) {
+      .hero-inner { align-items: flex-start; }
+      .hero-badge { font-size: 13px; padding: 10px; }
+      .workspace { grid-template-columns: 1fr; }
+      .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+      .sidebar .card:first-child { grid-row: span 2; }
+      #viewport { height: min(65vw, 440px); min-height: 300px; }
+      .steps { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .hero { padding: 20px 16px; }
+      .hero-inner { display: block; }
+      .hero-badge { display: inline-block; margin-top: 14px; }
+      main { padding: 14px 10px 25px; }
+      .curriculum { padding: 12px; font-size: 13px; }
+      .sidebar { grid-template-columns: 1fr; }
+      .sidebar .card:first-child { grid-row: auto; }
+      .math-grid { grid-template-columns: 1fr; }
+      .math-card .big-number { font-size: 32px; }
+      .card-heading { padding: 16px; }
+      .viewport-wrap { margin: 0 7px; }
+      #viewport { min-height: 285px; height: 82vw; max-height: 380px; }
+      .dimension-tag { padding: 6px 8px; font-size: 10px; }
+      .dimension-tag strong { font-size: 13px; }
+      .viewport-help { font-size: 9px; max-width: 145px; text-align: right; }
+      .teaching-section { padding: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">Makmal Matematik Interaktif</div>
+        <h1>🧊 Jom Teroka Isi Padu!</h1>
+        <p>Matematik Tahun 4 · Sukatan dan Geometri · Topik 6.4</p>
+      </div>
+      <div class="hero-badge">
+        MISI 3D
+        <span>Kira, susun dan fahami!</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="curriculum">
+      <div class="icon">🎯</div>
+      <div>
+        <strong>Objektif Pembelajaran</strong><br>
+        Murid dapat menentukan isi padu kubus dan kuboid menggunakan kubus 1 unit padu dan rumus.
+        <div class="small-text">DSKP Matematik Tahun 4 · Standard Pembelajaran 6.4.1</div>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <!-- PAPARAN 3D -->
+      <div class="card">
+        <div class="card-heading">
+          <div>
+            <h2>🔬 Makmal Pepejal 3D</h2>
+            <div class="small-text">Seret untuk memusingkan objek.</div>
+          </div>
+          <span class="live-pill">● LANGSUNG</span>
+        </div>
+
+        <div class="viewport-wrap">
+          <div id="tagP" class="dimension-tag">
+            ↔ Panjang
+            <strong id="labelP">4 unit</strong>
+          </div>
+          <div id="tagL" class="dimension-tag">
+            ↗ Lebar
+            <strong id="labelL">3 unit</strong>
+          </div>
+          <div id="tagT" class="dimension-tag">
+            ↕ Tinggi
+            <strong id="labelT">2 unit</strong>
+          </div>
+          <canvas id="viewport" aria-label="Model 3D kuboid interaktif"></canvas>
+          <div class="viewport-help">🖱 Seret: pusing · Skrol: zum<br>Seret kanan: alih pandangan</div>
+        </div>
+
+        <div class="view-legend">
+          <div class="legend-item"><span class="dot dot-blue"></span> Kubus unit</div>
+          <div class="legend-item"><span class="dot dot-orange"></span> Lapisan tapak</div>
+          <div class="legend-item"><span class="dot dot-outline"></span> Garisan sempadan</div>
+        </div>
+      </div>
+
+      <!-- PANEL KAWALAN -->
+      <aside class="sidebar">
+        <section class="card">
+          <div class="card-heading">
+            <h2>🎛️ Kawalan Dimensi</h2>
+          </div>
+          <div class="control-body">
+            <div class="slider-block">
+              <div class="slider-head">
+                <label class="slider-name" for="panjang">↔ Panjang (p)</label>
+                <output id="nilaiP" class="slider-value" for="panjang">4</output>
+              </div>
+              <input type="range" id="panjang" min="1" max="8" value="4" step="1">
+              <div class="range-scale"><span>1 unit</span><span>8 unit</span></div>
+            </div>
+
+            <div class="slider-block">
+              <div class="slider-head">
+                <label class="slider-name" for="lebar">↗ Lebar (l)</label>
+                <output id="nilaiL" class="slider-value" for="lebar">3</output>
+              </div>
+              <input type="range" id="lebar" min="1" max="8" value="3" step="1">
+              <div class="range-scale"><span>1 unit</span><span>8 unit</span></div>
+            </div>
+
+            <div class="slider-block">
+              <div class="slider-head">
+                <label class="slider-name" for="tinggi">↕ Tinggi (t)</label>
+                <output id="nilaiT" class="slider-value" for="tinggi">2</output>
+              </div>
+              <input type="range" id="tinggi" min="1" max="8" value="2" step="1">
+              <div class="range-scale"><span>1 unit</span><span>8 unit</span></div>
+            </div>
+
+            <div class="small-text">Ubah nilai untuk melihat bagaimana isi padu berubah.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-heading">
+            <h2>👀 Mod Paparan</h2>
+          </div>
+          <div class="control-body">
+            <div class="mode-options">
+              <label class="mode-option">
+                <input type="radio" name="mod" value="unit" checked>
+                <span class="mode-icon">🧊</span>
+                <span>
+                  <strong>Susunan Kubus Unit</strong>
+                  <small>Lihat setiap kubus 1 unit padu dan garisan sempadannya.</small>
+                </span>
+              </label>
+
+              <label class="mode-option">
+                <input type="radio" name="mod" value="solid">
+                <span class="mode-icon">🟦</span>
+                <span>
+                  <strong>Bentuk Blok Padu</strong>
+                  <small>Lihat kuboid penuh bersama ukuran dimensinya.</small>
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-heading">
+            <h2>🚀 Aktiviti</h2>
+          </div>
+          <div class="control-body">
+            <div class="button-stack">
+              <button id="animasiBtn" class="btn btn-primary">▶ Animasi Susun Kubus</button>
+              <button id="resetBtn" class="btn btn-reset">↺ Reset Simulasi</button>
+            </div>
+            <p id="statusAnimasi" class="small-text" aria-live="polite" style="margin:12px 0 0">
+              Sedia untuk meneroka!
+            </p>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <!-- KAD PENGIRAAN -->
+    <section class="math-grid">
+      <article class="math-card">
+        <div class="mini-label">🧊 Kiraan Unit Padu</div>
+        <div class="big-number" id="jumlahKubus">24 unit³</div>
+        <div class="detail" id="butiranKubus">4 × 3 × 2 = 24 kubus unit.</div>
+      </article>
+
+      <article class="math-card featured">
+        <div class="mini-label">📐 Kiraan Rumus</div>
+        <div class="big-number" id="jawapanIsiPadu">24 unit³</div>
+        <div class="detail">
+          Isi Padu = Panjang × Lebar × Tinggi
+          <div id="langkahPengiraan" style="margin-top:8px;font-weight:800;color:#99551a">
+            4 × 3 × 2 = 24 unit³
+          </div>
+        </div>
+      </article>
+
+      <article class="math-card tip">
+        <div class="mini-label">💡 Tip Pedagogi</div>
+        <div class="big-number" id="bilanganLapisan">2 lapisan</div>
+        <div class="detail" id="notaPedagogi">
+          12 kubus pada tapak dilapiskan sebanyak 2 kali.
+        </div>
+        <div id="lapisanVisual" class="layer-box" aria-label="Bilangan lapisan"></div>
+      </article>
+    </section>
+
+    <!-- PENERANGAN -->
+    <section class="teaching-section">
+      <h2>📚 Mari Fahami Konsep Isi Padu</h2>
+      <p class="small-text">
+        Isi padu ialah ruang yang dipenuhi oleh sesuatu pepejal. Kita boleh menentukan isi padu
+        dengan mengira bilangan kubus unit yang memenuhi pepejal tanpa ruang kosong dan tanpa
+        pertindihan.
+      </p>
+
+      <div class="steps">
+        <div class="step">
+          <span class="step-number">1</span>
+          <div>
+            <strong>Kira kubus pada tapak</strong>
+            Darabkan panjang dengan lebar untuk mengetahui bilangan kubus dalam satu lapisan.
+            <div id="langkahTapak" style="color:#2053ae;font-weight:800;margin-top:5px">4 × 3 = 12 kubus</div>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-number">2</span>
+          <div>
+            <strong>Kira bilangan lapisan</strong>
+            Setiap lapisan mempunyai bilangan kubus yang sama. Bilangan lapisan ditentukan oleh tinggi.
+            <div id="langkahTinggi" style="color:#2053ae;font-weight:800;margin-top:5px">2 lapisan</div>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-number">3</span>
+          <div>
+            <strong>Darab untuk mencari isi padu</strong>
+            Darabkan bilangan kubus dalam satu lapisan dengan bilangan lapisan.
+            <div id="langkahAkhir" style="color:#2053ae;font-weight:800;margin-top:5px">12 × 2 = 24 unit³</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="formula-banner">
+        <span>Ingat rumus:</span>
+        <strong>Isi Padu = p × l × t</strong>
+        <span>Unit padu (unit³)</span>
+      </div>
+    </section>
+
+    <footer>
+      Simulasi pembelajaran Matematik Tahun 4 · KSSR Semakan · SP 6.4.1<br>
+      Tip: Gunakan tetikus atau skrin sentuh untuk meneroka objek dari pelbagai sudut.
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("viewport");
+      const viewportWrap = document.querySelector(".viewport-wrap");
+
+      const controls = {
+        p: document.getElementById("panjang"),
+        l: document.getElementById("lebar"),
+        t: document.getElementById("tinggi")
+      };
+
+      const outputs = {
+        p: document.getElementById("nilaiP"),
+        l: document.getElementById("nilaiL"),
+        t: document.getElementById("nilaiT"),
+        labelP: document.getElementById("labelP"),
+        labelL: document.getElementById("labelL"),
+        labelT: document.getElementById("labelT")
+      };
+
+      const status = document.getElementById("statusAnimasi");
+      const animasiBtn = document.getElementById("animasiBtn");
+
+      let renderer, scene, camera, orbit;
+      let unitGroup = null;
+      let solidGroup = null;
+      let dimensionGroup = null;
+      let floorGrid = null;
+      let currentMode = "unit";
+      let animationFrame = null;
+      let animationIndex = 0;
+      let animationAccumulator = 0;
+      let lastFrameTime = 0;
+      let resizeObserver = null;
+      let disposed = false;
+
+      const DEFAULTS = { p: 4, l: 3, t: 2 };
+      const CUBE_GAP = 0.018;
+
+      function dimensions() {
+        return {
+          p: Number(controls.p.value),
+          l: Number(controls.l.value),
+          t: Number(controls.t.value)
+        };
+      }
+
+      function init() {
+        if (!window.THREE || !THREE.OrbitControls) {
+          canvas.style.display = "none";
+          const error = document.createElement("div");
+          error.style.cssText =
+            "padding:30px;color:#a22;line-height:1.7;text-align:center";
+          error.textContent =
+            "Pustaka 3D tidak dapat dimuatkan. Sila semak sambungan Internet dan muat semula halaman.";
+          viewportWrap.appendChild(error);
+          animasiBtn.disabled = true;
+          return;
+        }
+
+        try {
+          renderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance"
+          });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setClearColor(0xeaf3ff, 0);
+          renderer.outputEncoding = THREE.sRGBEncoding;
+
+          scene = new THREE.Scene();
+          scene.background = new THREE.Color(0xeaf3ff);
+          scene.fog = new THREE.Fog(0xeaf3ff, 24, 48);
+
+          camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+          camera.position.set(11, 10, 13);
+
+          orbit = new THREE.OrbitControls(camera, renderer.domElement);
+          orbit.enableDamping = true;
+          orbit.dampingFactor = 0.07;
+          orbit.enablePan = true;
+          orbit.enableZoom = true;
+          orbit.minDistance = 5;
+          orbit.maxDistance = 34;
+          orbit.maxPolarAngle = Math.PI * 0.48;
+          orbit.target.set(0, 2, 0);
+          orbit.update();
+
+          scene.add(new THREE.AmbientLight(0xffffff, 0.82));
+
+          const sun = new THREE.DirectionalLight(0xffffff, 1.15);
+          sun.position.set(8, 14, 10);
+          scene.add(sun);
+
+          const fill = new THREE.DirectionalLight(0xb7d3ff, 0.48);
+          fill.position.set(-8, 5, -5);
+          scene.add(fill);
+
+          const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(80, 80),
+            new THREE.MeshStandardMaterial({
+              color: 0xf6f9ff,
+              roughness: 1,
+              metalness: 0
+            })
+          );
+          ground.rotation.x = -Math.PI / 2;
+          ground.position.y = -0.055;
+          scene.add(ground);
+
+          floorGrid = new THREE.GridHelper(50, 50, 0xa7bddf, 0xd5e1f4);
+          floorGrid.position.y = -0.045;
+          scene.add(floorGrid);
+
+          unitGroup = new THREE.Group();
+          solidGroup = new THREE.Group();
+          dimensionGroup = new THREE.Group();
+          scene.add(unitGroup, solidGroup, dimensionGroup);
+
+          resizeObserver = new ResizeObserver(resizeRenderer);
+          resizeObserver.observe(viewportWrap);
+          resizeRenderer();
+
+          Object.values(controls).forEach(input => {
+            input.addEventListener("input", updateSimulation);
+          });
+
+          document.querySelectorAll('input[name="mod"]').forEach(radio => {
+            radio.addEventListener("change", () => {
+              currentMode = radio.value;
+              stopAnimation(false);
+              renderModel();
+              updateVisibility();
+              status.textContent = currentMode === "unit"
+                ? "Mod kubus unit dipilih. Kira setiap kubus!"
+                : "Mod blok padu dipilih. Perhatikan tiga dimensinya.";
+            });
+          });
+
+          animasiBtn.addEventListener("click", startAnimation);
+          document.getElementById("resetBtn").addEventListener("click", resetSimulation);
+
+          updateSimulation();
+          animate();
+        } catch (error) {
+          console.error(error);
+          status.textContent =
+            "Paparan 3D gagal dimulakan. Cuba gunakan pelayar yang menyokong WebGL.";
+        }
+      }
+
+      function resizeRenderer() {
+        if (!renderer || !camera) return;
+
+        const width = Math.max(1, viewportWrap.clientWidth);
+        const height = Math.max(1, viewportWrap.clientHeight);
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+
+      function clearGroup(group) {
+        while (group.children.length) {
+          const child = group.children[group.children.length - 1];
+          group.remove(child);
+
+          child.traverse?.(object => {
+            if (object.geometry) object.geometry.dispose();
+
+            if (object.material) {
+              const materials = Array.isArray(object.material)
+                ? object.material
+                : [object.material];
+
+              materials.forEach(material => {
+                if (material.map) material.map.dispose();
+                material.dispose();
+              });
+            }
+          });
+        }
+      }
+
+      function makeTextSprite(text, options = {}) {
+        const canvas2d = document.createElement("canvas");
+        const ctx = canvas2d.getContext("2d");
+        const fontSize = 40;
+        const padding = 16;
+
+        ctx.font = `bold ${fontSize}px Arial`;
+        const measured = Math.ceil(ctx.measureText(text).width);
+        canvas2d.width = measured + padding * 2;
+        canvas2d.height = fontSize + padding * 2;
+
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillStyle = options.background || "#ffffff";
+        ctx.strokeStyle = options.border || "#d5e2f7";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(1, 1, canvas2d.width - 2, canvas2d.height - 2, 13);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = options.color || "#2053ae";
+        ctx.fillText(text, canvas2d.width / 2, canvas2d.height / 2);
+
+        const texture = new THREE.CanvasTexture(canvas2d);
+        texture.encoding = THREE.sRGBEncoding;
+
+        const sprite = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false
+          })
+        );
+
+        sprite.scale.set(canvas2d.width / 110, canvas2d.height / 110, 1);
+        sprite.renderOrder = 10;
+        return sprite;
+      }
+
+      function addDimensionLine(group, start, end, label, color) {
+        const points = [
+          new THREE.Vector3(...start),
+          new THREE.Vector3(...end)
+        ];
+
+        const line = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(points),
+          new THREE.LineBasicMaterial({ color, depthTest: false })
+        );
+        line.renderOrder = 8;
+        group.add(line);
+
+        const midpoint = new THREE.Vector3(
+          (start[0] + end[0]) / 2,
+          (start[1] + end[1]) / 2,
+          (start[2] + end[2]) / 2
+        );
+
+        const sprite = makeTextSprite(label, {
+          color: "#" + color.toString(16).padStart(6, "0")
+        });
+
+        sprite.position.copy(midpoint);
+        sprite.position.y += 0.2;
+        group.add(sprite);
+      }
+
+      function buildUnitCubes(p, l, t) {
+        clearGroup(unitGroup);
+
+        const geometry = new THREE.BoxGeometry(
+          1 - CUBE_GAP,
+          1 - CUBE_GAP,
+          1 - CUBE_GAP
+        );
+
+        const edgeGeometry = new THREE.EdgesGeometry(geometry);
+
+        const materials = [
+          new THREE.MeshStandardMaterial({
+            color: 0x4591f5,
+            roughness: 0.42,
+            metalness: 0,
+            transparent: true,
+            opacity: 0.91
+          }),
+          new THREE.MeshStandardMaterial({
+            color: 0xffaa55,
+            roughness: 0.5,
+            transparent: true,
+            opacity: 0.94
+          })
+        ];
+
+        const edgeMaterial = new THREE.LineBasicMaterial({
+          color: 0x273e60,
+          transparent: true,
+          opacity: 0.85
+        });
+
+        const centerX = (p - 1) / 2;
+        const centerZ = (l - 1) / 2;
+        let count = 0;
+
+        // Setiap lapisan mengandungi p × l kubus unit.
+        for (let y = 0; y < t; y++) {
+          for (let z = 0; z < l; z++) {
+            for (let x = 0; x < p; x++) {
+              const cube = new THREE.Mesh(
+                geometry,
+                y === 0 ? materials[1] : materials[0]
+              );
+
+              cube.position.set(
+                x - centerX,
+                y + 0.5,
+                z - centerZ
+              );
+
+              cube.userData.index = count++;
+              cube.userData.layer = y + 1;
+
+              const edges = new THREE.LineSegments(
+                edgeGeometry,
+                edgeMaterial
+              );
+              edges.position.copy(cube.position);
+              edges.userData.index = cube.userData.index;
+
+              unitGroup.add(cube, edges);
+            }
+          }
+        }
+      }
+
+      function buildSolid(p, l, t) {
+        clearGroup(solidGroup);
+
+        const geometry = new THREE.BoxGeometry(p, t, l);
+
+        const mesh = new THREE.Mesh(
+          geometry,
+          new THREE.MeshStandardMaterial({
+            color: 0x5b9af5,
+            roughness: 0.48,
+            metalness: 0.02,
+            transparent: true,
+            opacity: 0.9
+          })
+        );
+
+        mesh.position.y = t / 2;
+        solidGroup.add(mesh);
+
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geometry),
+          new THREE.LineBasicMaterial({
+            color: 0x243b5d,
+            linewidth: 2
+          })
+        );
+
+        edges.position.copy(mesh.position);
+        solidGroup.add(edges);
+
+        // Penanda dimensi diletakkan di luar blok.
+        clearGroup(dimensionGroup);
+
+        const offset = 0.65;
+
+        addDimensionLine(
+          dimensionGroup,
+          [-p / 2, -0.12, l / 2 + offset],
+          [p / 2, -0.12, l / 2 + offset],
+          `Panjang = ${p} unit`,
+          0x2053ae
+        );
+
+        addDimensionLine(
+          dimensionGroup,
+          [p / 2 + offset, -0.12, -l / 2],
+          [p / 2 + offset, -0.12, l / 2],
+          `Lebar = ${l} unit`,
+          0xc66a13
+        );
+
+        addDimensionLine(
+          dimensionGroup,
+          [-p / 2 - offset, 0, l / 2],
+          [-p / 2 - offset, t, l / 2],
+          `Tinggi = ${t} unit`,
+          0x16845e
+        );
+      }
+
+      function updateVisibility() {
+        if (!unitGroup || !solidGroup || !dimensionGroup) return;
+
+        unitGroup.visible = currentMode === "unit";
+        solidGroup.visible = currentMode === "solid";
+        dimensionGroup.visible = currentMode === "solid";
+      }
+
+      function updateMath(p, l, t) {
+        const base = p * l;
+        const volume = base * t;
+
+        document.getElementById("jumlahKubus").textContent =
+          `${volume} unit³`;
+
+        document.getElementById("butiranKubus").textContent =
+          `${p} × ${l} × ${t} = ${volume} kubus unit.`;
+
+        document.getElementById("jawapanIsiPadu").textContent =
+          `${volume} unit³`;
+
+        document.getElementById("langkahPengiraan").textContent =
+          `${p} × ${l} × ${t} = ${volume} unit³`;
+
+        document.getElementById("bilanganLapisan").textContent =
+          `${t} ${t === 1 ? "lapisan" : "lapisan"}`;
+
+        document.getElementById("notaPedagogi").textContent =
+          `${base} kubus pada tapak dilapiskan sebanyak ${t} kali.`;
+
+        document.getElementById("langkahTapak").textContent =
+          `${p} × ${l} = ${base} kubus`;
+
+        document.getElementById("langkahTinggi").textContent =
+          `${t} ${t === 1 ? "lapisan" : "lapisan"}`;
+
+        document.getElementById("langkahAkhir").textContent =
+          `${base} × ${t} = ${volume} unit³`;
+
+        const layerVisual = document.getElementById("lapisanVisual");
+        layerVisual.replaceChildren();
+
+        // Paparkan semua lapisan untuk dimensi biasa, dan ringkaskan
+        // apabila bilangan lapisan besar.
+        for (let i = 1; i <= t; i++) {
+          const chip = document.createElement("span");
+          chip.className = "layer-chip";
+          chip.textContent = `Lapisan ${i}`;
+          layerVisual.appendChild(chip);
+        }
+
+        return { base, volume };
+      }
+
+      function updateSimulation() {
+        if (disposed || !scene) return;
+
+        stopAnimation(false);
+
+        const { p, l, t } = dimensions();
+
+        outputs.p.textContent = p;
+        outputs.l.textContent = l;
+        outputs.t.textContent = t;
+
+        outputs.labelP.textContent = `${p} unit`;
+        outputs.labelL.textContent = `${l} unit`;
+        outputs.labelT.textContent = `${t} unit`;
+
+        updateMath(p, l, t);
+        renderModel();
+        status.textContent = "Model dikemas kini. Cuba ubah dimensi!";
+      }
+
+      function renderModel() {
+        if (!scene) return;
+
+        const { p, l, t } = dimensions();
+
+        buildUnitCubes(p, l, t);
+        buildSolid(p, l, t);
+
+        const maxDimension = Math.max(p, l, t);
+        const targetY = t / 2 + 0.5;
+
+        orbit.target.set(0, targetY, 0);
+
+        // Laraskan kamera jika saiz objek berubah dengan ketara.
+        const distance = Math.max(9, maxDimension * 2.35);
+        camera.position.set(distance, distance * 0.85, distance * 1.1);
+        orbit.update();
+
+        updateVisibility();
+      }
+
+      function stopAnimation(showMessage = true) {
+        if (animationFrame !== null) {
+          cancelAnimationFrame(animationFrame);
+          animationFrame = null;
+        }
+
+        animationIndex = 0;
+        animationAccumulator = 0;
+        animasiBtn.disabled = false;
+        animasiBtn.textContent = "▶ Animasi Susun Kubus";
+
+        if (unitGroup) {
+          unitGroup.children.forEach(child => {
+            child.visible = true;
+          });
+        }
+
+        if (showMessage) {
+          status.textContent = "Animasi dihentikan.";
+        }
+      }
+
+      function startAnimation() {
+        if (!scene || currentMode !== "unit") {
+          currentMode = "unit";
+          document.querySelector('input[name="mod"][value="unit"]').checked = true;
+          updateVisibility();
+        }
+
+        stopAnimation(false);
+
+        const { p, l, t } = dimensions();
+        const total = p * l * t;
+        const base = p * l;
+
+        // Setiap kubus dan garisan tepinya muncul mengikut urutan lapisan.
+        const children = unitGroup.children;
+        children.forEach(child => {
+          child.visible = false;
+        });
+
+        animationIndex = 0;
+        animationAccumulator = 0;
+        lastFrameTime = performance.now();
+        animasiBtn.disabled = true;
+        animasiBtn.textContent = "⏳ Sedang Menyusun...";
+
+        status.textContent = `Menyusun lapisan 1 daripada ${t}...`;
+
+        function step(timestamp) {
+          if (disposed || !unitGroup) return;
+
+          const delta = Math.min(timestamp - lastFrameTime, 100);
+          lastFrameTime = timestamp;
+          animationAccumulator += delta;
+
+          // Dua objek (kubus + garisan tepi) ditunjukkan pada setiap langkah.
+          const interval = 35;
+
+          while (animationAccumulator >= interval && animationIndex < total) {
+            animationAccumulator -= interval;
+
+            const index = animationIndex;
+            const cube = children[index * 2];
+            const edge = children[index * 2 + 1];
+
+            if (cube) cube.visible = true;
+            if (edge) edge.visible = true;
+
+            animationIndex++;
+
+            const currentLayer = Math.min(
+              t,
+              Math.floor((animationIndex - 1) / base) + 1
+            );
+
+            status.textContent =
+              `Menyusun lapisan ${currentLayer} daripada ${t} · ` +
+              `${animationIndex}/${total} kubus`;
+          }
+
+          if (animationIndex < total) {
+            animationFrame = requestAnimationFrame(step);
+          } else {
+            animationFrame = null;
+            animasiBtn.disabled = false;
+            animasiBtn.textContent = "↻ Ulang Animasi";
+            status.textContent =
+              `Siap! ${total} kubus unit membentuk isi padu ${total} unit³.`;
+          }
+        }
+
+        animationFrame = requestAnimationFrame(step);
+      }
+
+      function resetSimulation() {
+        stopAnimation(false);
+
+        controls.p.value = DEFAULTS.p;
+        controls.l.value = DEFAULTS.l;
+        controls.t.value = DEFAULTS.t;
+
+        currentMode = "unit";
+        document.querySelector('input[name="mod"][value="unit"]').checked = true;
+
+        updateSimulation();
+
+        camera.position.set(11, 10, 13);
+        orbit.target.set(0, 1.5, 0);
+        orbit.update();
+
+        status.textContent = "Tetapan asal dipulihkan: 4 × 3 × 2 = 24 unit³.";
+      }
+
+      function animate() {
+        if (disposed) return;
+
+        requestAnimationFrame(animate);
+
+        if (orbit) orbit.update();
+        if (renderer && scene && camera) {
+          renderer.render(scene, camera);
+        }
+      }
+
+      window.addEventListener("beforeunload", () => {
+        disposed = true;
+        if (resizeObserver) resizeObserver.disconnect();
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      });
+
+      init();
+    })();
+  </script>
+</body>
+</html>
